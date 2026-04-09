@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Kênh Người Bán - Shopee</title>
+    <style>
+        /* Phần trang điểm cho app đẹp lại */
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; margin: 0; }
+        .form { 
+            background: white; padding: 20px; border-radius: 8px; 
+            max-width: 600px; margin: 50px auto 20px auto; 
+            border: 1px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background: #ee4d2d; color: white; padding: 12px; border: none; width: 100%; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        button:hover { background: #d73211; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #fafafa; color: #555; }
+        
+        .back-btn { 
+            position: absolute; top: 20px; left: 20px; 
+            text-decoration: none; color: #ee4d2d; 
+            font-size: 18px; font-weight: bold; display: flex; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div style="position: absolute; top: 20px; left: 20px; display: flex; gap: 20px;">
+        <a href="home.html" style="text-decoration: none; color: #666; font-size: 16px; font-weight: bold; display: flex; align-items: center;">
+            <span style="font-size: 20px; margin-right: 5px;">&larr;</span> Hệ thống
+        </a>
+
+        <a href="index.html" style="text-decoration: none; color: #ee4d2d; font-size: 16px; font-weight: bold; display: flex; align-items: center; border: 1px solid #ee4d2d; padding: 5px 15px; border-radius: 4px; background: white;">
+            <span style="margin-right: 5px;">🏠</span> Xem với vai trò Người mua
+        </a>
+    </div>
+
+    <div class="form">
+        <h3 style="text-align: center; color: #333; margin-top: 0;">ĐĂNG SẢN PHẨM MỚI</h3>
+        <input type="text" id="name" placeholder="Tên sản phẩm">
+        <input type="number" id="price" placeholder="Giá bán (VNĐ)">
+        <textarea id="desc" rows="3" placeholder="Mô tả sản phẩm chi tiết..."></textarea>
+        <div style="margin: 10px 0;">
+            <label style="font-size: 14px; color: #666;">Chọn ảnh sản phẩm:</label>
+            <input type="file" id="file" accept="image/*" style="border: none; padding: 5px 0;">
+        </div>
+        <button onclick="upload()">TẢI LÊN SHOPEE</button>
+    </div>
+
+    <h2 style="text-align: center; color: #333; margin-top: 40px; margin-bottom: 20px;">SẢN PHẨM CỦA TÔI</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 100px;">Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th style="width: 150px;">Giá bán</th>
+                <th style="width: 150px;">Lượt thêm vào giỏ</th>
+            </tr>
+        </thead>
+        <tbody id="bodyTbl"></tbody>
+    </table>
+
+    <script>
+        async function upload() {
+            const fileInput = document.getElementById('file');
+            if (fileInput.files.length === 0) {
+                alert("Vui lòng chọn một tấm ảnh đã Ha ơi!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("name", document.getElementById('name').value);
+            formData.append("price", document.getElementById('price').value);
+            formData.append("description", document.getElementById('desc').value);
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/products', { method: 'POST', body: formData });
+                const msg = await res.text();
+                alert(msg);
+                location.reload();
+            } catch (err) {
+                alert("Lỗi rồi: " + err);
+            }
+        }
+
+        async function load() {
+        try {
+            const resProd = await fetch('/api/products');
+            const products = await resProd.json();
+            
+            const resStats = await fetch('/api/cart/stats');
+            const stats = await resStats.json();
+            
+            let html = '';
+            products.forEach(p => {
+                // Lấy số lượt từ stats, nếu chưa có ai bấm thì mặc định là 0
+                const count = stats[p.name] || 0;
+                
+                html += `
+                    <tr>
+                        <td><img src="${p.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
+                        <td style="font-weight: bold;">${p.name}</td>
+                        <td style="color: #ee4d2d; font-weight: bold;">${p.price.toLocaleString()}₫</td>
+                        <td style="text-align: center; font-weight: bold; color: blue;">
+                            ${count} lần
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('bodyTbl').innerHTML = html;
+        } catch (err) {
+            console.error(err);
+        }
+    }
+        load();
+    </script>
+</body>
+</html>
